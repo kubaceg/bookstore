@@ -9,4 +9,6 @@ proto:
 	protoc -I /usr/local/include -I api/protobuf $(GO_OPT_FLAG) $(GRPC_OPT_FLAG) --go_out=$(GENPROTO_PATH) --go-grpc_out=$(GENPROTO_PATH) api/protobuf/user/user.proto
 	protoc -I /usr/local/include -I api/protobuf $(GO_OPT_FLAG) $(GRPC_OPT_FLAG) --go_out=$(GENPROTO_PATH) --go-grpc_out=$(GENPROTO_PATH) api/protobuf/reservation/reservation.proto
 
-
+.PHONY: tests
+tests:
+	cd internal/books && go test -count 5 ./...

@@ -3,4 +3,4 @@
 
 # Bookstore
 
-Example project (playground) which allows me to test some new techniques. 
+Simple bookstore service written in GO. It's playground project which allows me to test some new techniques.

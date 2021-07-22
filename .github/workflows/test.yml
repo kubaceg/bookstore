@@ -17,8 +17,8 @@ jobs:
         with:
           go-version: 1.15
 
-      - name: Build
+      - name: Build books
         run: cd internal/books && go build -v ./...
 
       - name: Test
-        run: cd internal/books &&  go test -v ./...
+        run: make tests
