@@ -2,19 +2,17 @@ syntax = "proto3";
 package reservation;
 option go_package = "github.com/kubaceg/bookstore/internal/common/genproto/reservation;reservation";
 
-import "book/book.proto";
-import "user/user.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
 service ReservationService {
-  rpc CreateReservation(Reservation) returns (ReservationId) {}
+  rpc CreateReservation(CreateReservation) returns (ReservationId) {}
 }
 
-message Reservation {
+message CreateReservation {
   string reservationId = 1;
-  user.User user = 2;
-  book.Book book = 3;
+  string userId = 2;
+  string bookId = 3;
   google.protobuf.Timestamp createdAt = 4;
   google.protobuf.Duration duration = 5;
 }
