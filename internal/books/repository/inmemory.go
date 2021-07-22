@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"github.com/kubaceg/bookstore/internal/common/log"
 )
@@ -41,11 +42,19 @@ func (i *InMemoryBookRepository) GetBook(_ context.Context, id string) (book *Bo
 	return nil, BookNotFound
 }
 
-func (i *InMemoryBookRepository) GetBookList(_ context.Context, params BookListParams) (list []BookEntity, err error) {
+func (i *InMemoryBookRepository) GetBookList(_ context.Context, _ BookListParams) (list []BookEntity, err error) {
 	list = []BookEntity{}
+	keys := make([]string, 0, len(i.books))
 
-	for _, book := range i.books {
-		list = append(list, book)
+	for k := range i.books {
+		keys = append(keys, k)
+	}
+
+	// Make sure thar list will be always in same order
+	sort.Strings(keys)
+
+	for _, k := range keys {
+		list = append(list, i.books[k])
 	}
 
 	return
