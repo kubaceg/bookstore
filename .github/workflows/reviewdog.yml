@@ -7,7 +7,7 @@ on:
     branches: [ master ]
 
 jobs:
-  golangci-lint:
+  books-lint:
     name: runner / golangci-lint
     runs-on: ubuntu-latest
     steps:
@@ -23,7 +23,7 @@ jobs:
           workdir: internal/books/
 
   # You can add more and more supported linters with different config.
-  errcheck:
+  books-errcheck:
     name: runner / errcheck
     runs-on: ubuntu-latest
     steps:
@@ -36,6 +36,36 @@ jobs:
           tool_name: errcheck
           level: info
           workdir: internal/books
+
+  common-lint:
+    name: runner / golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+      - name: golangci-lint
+        uses: reviewdog/action-golangci-lint@v1
+        with:
+          workdir: internal/common/
+
+  # You can add more and more supported linters with different config.
+  common-errcheck:
+    name: runner / errcheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+      - name: errcheck
+        uses: reviewdog/action-golangci-lint@v1
+        with:
+          golangci_lint_flags: "--disable-all -E errcheck"
+          tool_name: errcheck
+          level: info
+          workdir: internal/common/
 
   # Enable cache of golangci-lint result, go build and go dependencies
   with_cache:
