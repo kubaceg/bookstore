@@ -1,33 +1,36 @@
 package server
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"net"
-	"os"
 
 	"google.golang.org/grpc"
+
+	"github.com/kubaceg/bookstore/internal/common/log"
 )
 
-func RunGRPCServer(registerServer func(server *grpc.Server)) {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-	addr := fmt.Sprintf(":%s", port)
-	RunGRPCServerOnAddr(addr, registerServer)
+type GrpcServer struct {
+	log log.Logger
 }
 
-func RunGRPCServerOnAddr(addr string, registerServer func(server *grpc.Server)) {
+func NewGrpcServer(l log.Logger) *GrpcServer {
+	return &GrpcServer{l}
+}
+
+func (g *GrpcServer) RunGRPCServer(ctx context.Context, port string, registerServer func(server *grpc.Server)) {
 	grpcServer := grpc.NewServer()
 	registerServer(grpcServer)
 
+	addr := fmt.Sprintf(":%s", port)
 	listen, err := net.Listen("tcp", addr)
 	if err != nil {
-		log.Fatal(err)
+		g.log.Fatal(ctx, err)
 	}
 
+	g.log.Info(ctx, fmt.Sprintf("Start service on %s port", port))
+
 	if err := grpcServer.Serve(listen); err != nil {
-		log.Fatal(err)
+		g.log.Fatal(ctx, err)
 	}
 }

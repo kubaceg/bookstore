@@ -1,24 +1,30 @@
 package main
 
 import (
+	"context"
 	"flag"
-	"fmt"
+
 	"google.golang.org/grpc"
-	"log"
-	"net"
+
+	"github.com/kubaceg/bookstore/internal/books/repository"
+	"github.com/kubaceg/bookstore/internal/books/service"
+	"github.com/kubaceg/bookstore/internal/common/genproto/book"
+	"github.com/kubaceg/bookstore/internal/common/log"
+	"github.com/kubaceg/bookstore/internal/common/server"
 )
 
-var (
-	tls        = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
-	certFile   = flag.String("cert_file", "", "The TLS cert file")
-	keyFile    = flag.String("key_file", "", "The TLS key file")
-	jsonDBFile = flag.String("json_db_file", "", "A json file containing a list of features")
-	port       = flag.Int("port", 10000, "The server port")
-)
+var port string
 
 func main() {
-	server.RunGRPCServer(func(server *grpc.Server) {
-		svc := ports.NewGrpcServer(application)
-		trainer.RegisterTrainerServiceServer(server, svc)
+	flag.StringVar(&port, "port", "8080", "Service port")
+	flag.Parse()
+
+	logger := log.StdOut{}
+	memoryRepo := repository.NewInMemoryBookRepository(logger)
+	bookServer := service.NewBookGrpcService(memoryRepo)
+	grpcServer := server.NewGrpcServer(logger)
+
+	grpcServer.RunGRPCServer(context.Background(), port, func(server *grpc.Server) {
+		book.RegisterBookServiceServer(server, bookServer)
 	})
 }

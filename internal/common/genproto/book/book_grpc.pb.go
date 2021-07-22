@@ -20,7 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type BookServiceClient interface {
 	AddBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*BookId, error)
-	GetBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*Book, error)
 	GetBookList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*BookList, error)
 }
 
@@ -41,8 +41,8 @@ func (c *bookServiceClient) AddBook(ctx context.Context, in *Book, opts ...grpc.
 	return out, nil
 }
 
-func (c *bookServiceClient) GetBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *bookServiceClient) GetBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*Book, error) {
+	out := new(Book)
 	err := c.cc.Invoke(ctx, "/book.BookService/GetBook", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func (c *bookServiceClient) GetBookList(ctx context.Context, in *emptypb.Empty, 
 // for forward compatibility
 type BookServiceServer interface {
 	AddBook(context.Context, *Book) (*BookId, error)
-	GetBook(context.Context, *BookId) (*emptypb.Empty, error)
+	GetBook(context.Context, *BookId) (*Book, error)
 	GetBookList(context.Context, *emptypb.Empty) (*BookList, error)
 	mustEmbedUnimplementedBookServiceServer()
 }
@@ -76,7 +76,7 @@ type UnimplementedBookServiceServer struct {
 func (UnimplementedBookServiceServer) AddBook(context.Context, *Book) (*BookId, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddBook not implemented")
 }
-func (UnimplementedBookServiceServer) GetBook(context.Context, *BookId) (*emptypb.Empty, error) {
+func (UnimplementedBookServiceServer) GetBook(context.Context, *BookId) (*Book, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBook not implemented")
 }
 func (UnimplementedBookServiceServer) GetBookList(context.Context, *emptypb.Empty) (*BookList, error) {
