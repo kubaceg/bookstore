@@ -1,6 +1,6 @@
 syntax = "proto3";
 package reservation;
-option go_package = "./reservation;reservation";
+option go_package = "github.com/kubaceg/bookstore/internal/common/genproto/reservation;reservation";
 
 import "book/book.proto";
 import "user/user.proto";

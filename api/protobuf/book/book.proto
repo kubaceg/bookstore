@@ -1,6 +1,6 @@
 syntax = "proto3";
 package book;
-option go_package = "./book;book";
+option go_package = "github.com/kubaceg/bookstore/internal/common/genproto/book;book";
 
 import "google/protobuf/empty.proto";
 

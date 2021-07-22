@@ -1,6 +1,6 @@
 syntax = "proto3";
 package user;
-option go_package = "./user;user";
+option go_package = "github.com/kubaceg/bookstore/internal/common/genproto/user;user";
 
 message User {
   string id = 1;
