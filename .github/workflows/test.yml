@@ -7,7 +7,6 @@ on:
     branches: [ master ]
 
 jobs:
-
   books-test:
     runs-on: ubuntu-latest
     steps:
