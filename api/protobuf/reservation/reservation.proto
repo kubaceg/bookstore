@@ -6,7 +6,8 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
 service ReservationService {
-  rpc CreateReservation(CreateReservation) returns (ReservationId) {}
+  rpc RentBook(CreateReservation) returns (ReservationId) {}
+  rpc ReturnBook(CreateReservation) returns (ReservationId) {}
 }
 
 message CreateReservation {
