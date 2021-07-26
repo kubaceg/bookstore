@@ -81,7 +81,7 @@ func TestInMemoryBookRepository_AddBook(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			logger := test.MockLogger{}
+			logger := test.LoggerMock{}
 			for name := range tt.logMocks {
 				logger.On(name, tt.logMocks[name]...)
 			}
@@ -153,7 +153,7 @@ func TestInMemoryBookRepository_GetBook(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			i := &InMemoryBookRepository{
 				books:  tt.books,
-				logger: &test.MockLogger{},
+				logger: &test.LoggerMock{},
 			}
 			gotBook, err := i.GetBook(context.TODO(), tt.id)
 			if err != tt.wantErr {
@@ -208,7 +208,7 @@ func TestInMemoryBookRepository_GetBookList(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			i := &InMemoryBookRepository{
 				books:  tt.books,
-				logger: &test.MockLogger{},
+				logger: &test.LoggerMock{},
 			}
 			gotBooks, _ := i.GetBookList(context.TODO(), BookListParams{})
 
@@ -274,7 +274,7 @@ func TestInMemoryBookRepository_ReserveBook(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			i := &InMemoryBookRepository{
 				books:  books,
-				logger: &test.MockLogger{},
+				logger: &test.LoggerMock{},
 			}
 			err := i.ReserveBook(context.TODO(), tt.id)
 			if err != tt.wantErr {
@@ -340,7 +340,7 @@ func TestInMemoryBookRepository_ReleaseBook(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			i := &InMemoryBookRepository{
 				books:  books,
-				logger: &test.MockLogger{},
+				logger: &test.LoggerMock{},
 			}
 			err := i.ReleaseBook(context.TODO(), tt.id)
 			if err != tt.wantErr {

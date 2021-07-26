@@ -6,22 +6,22 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type MockLogger struct {
+type LoggerMock struct {
 	mock.Mock
 }
 
-func (m *MockLogger) Info(ctx context.Context, msg interface{}) {
+func (m *LoggerMock) Info(ctx context.Context, msg interface{}) {
 	m.Called(ctx, msg)
 }
 
-func (m *MockLogger) Warn(ctx context.Context, msg interface{}) {
+func (m *LoggerMock) Warn(ctx context.Context, msg interface{}) {
 	m.Called(ctx, msg)
 }
 
-func (m *MockLogger) Error(ctx context.Context, msg interface{}) {
+func (m *LoggerMock) Error(ctx context.Context, msg interface{}) {
 	m.Called(ctx, msg)
 }
 
-func (m *MockLogger) Fatal(ctx context.Context, msg interface{}) {
+func (m *LoggerMock) Fatal(ctx context.Context, msg interface{}) {
 	m.Called(ctx, msg)
 }

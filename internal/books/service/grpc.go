@@ -19,15 +19,16 @@ func NewBookGrpcService(r repository.BookRepository) book.BookServiceServer {
 	return &BookGrpcService{repo: r}
 }
 
-func (b *BookGrpcService) AddBook(ctx context.Context, b2 *book.Book) (*book.BookId, error) {
+func (s *BookGrpcService) AddBook(ctx context.Context, b *book.Book) (*book.BookId, error) {
 	entity := repository.BookEntity{
-		Id:     b2.Id,
-		Title:  b2.Title,
-		Author: b2.Author,
-		Isbn:   b2.Isbn,
+		Id:     b.Id,
+		Title:  b.Title,
+		Author: b.Author,
+		Isbn:   b.Isbn,
+		State:  repository.BookState(b.State),
 	}
 
-	id, err := b.repo.AddBook(ctx, entity)
+	id, err := s.repo.AddBook(ctx, entity)
 
 	if err != nil {
 		return nil, err
@@ -36,8 +37,8 @@ func (b *BookGrpcService) AddBook(ctx context.Context, b2 *book.Book) (*book.Boo
 	return &book.BookId{Id: *id}, nil
 }
 
-func (b *BookGrpcService) GetBook(ctx context.Context, id *book.BookId) (entity *book.Book, err error) {
-	bookEntity, err := b.repo.GetBook(ctx, id.Id)
+func (s *BookGrpcService) GetBook(ctx context.Context, id *book.BookId) (entity *book.Book, err error) {
+	bookEntity, err := s.repo.GetBook(ctx, id.Id)
 
 	if err != nil {
 		return nil, err
@@ -48,19 +49,20 @@ func (b *BookGrpcService) GetBook(ctx context.Context, id *book.BookId) (entity 
 		Title:  bookEntity.Title,
 		Author: bookEntity.Author,
 		Isbn:   bookEntity.Isbn,
+		State:  book.State(bookEntity.State),
 	}
 
 	return
 }
 
-func (b *BookGrpcService) GetBookList(ctx context.Context, empty *emptypb.Empty) (*book.BookList, error) {
+func (s *BookGrpcService) GetBookList(ctx context.Context, empty *emptypb.Empty) (*book.BookList, error) {
 	panic("implement me")
 }
 
-func (b *BookGrpcService) ReserveBook(ctx context.Context, bookId *book.BookId) (*book.ReservationStatus, error) {
+func (s *BookGrpcService) ReserveBook(ctx context.Context, bookId *book.BookId) (*book.ReservationStatus, error) {
 	status := &book.ReservationStatus{}
 
-	err := b.repo.ReserveBook(ctx, bookId.Id)
+	err := s.repo.ReserveBook(ctx, bookId.Id)
 	if err != nil {
 		status.State = false
 
@@ -72,10 +74,10 @@ func (b *BookGrpcService) ReserveBook(ctx context.Context, bookId *book.BookId) 
 	return status, nil
 }
 
-func (b *BookGrpcService) ReleaseBook(ctx context.Context, bookId *book.BookId) (*book.ReservationStatus, error) {
+func (s *BookGrpcService) ReleaseBook(ctx context.Context, bookId *book.BookId) (*book.ReservationStatus, error) {
 	status := &book.ReservationStatus{}
 
-	err := b.repo.ReleaseBook(ctx, bookId.Id)
+	err := s.repo.ReleaseBook(ctx, bookId.Id)
 	if err != nil {
 		status.State = false
 
