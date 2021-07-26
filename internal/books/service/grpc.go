@@ -56,3 +56,33 @@ func (b *BookGrpcService) GetBook(ctx context.Context, id *book.BookId) (entity 
 func (b *BookGrpcService) GetBookList(ctx context.Context, empty *emptypb.Empty) (*book.BookList, error) {
 	panic("implement me")
 }
+
+func (b *BookGrpcService) ReserveBook(ctx context.Context, bookId *book.BookId) (*book.ReservationStatus, error) {
+	status := &book.ReservationStatus{}
+
+	err := b.repo.ReserveBook(ctx, bookId.Id)
+	if err != nil {
+		status.State = false
+
+		return status, err
+	}
+
+	status.State = true
+
+	return status, nil
+}
+
+func (b *BookGrpcService) ReleaseBook(ctx context.Context, bookId *book.BookId) (*book.ReservationStatus, error) {
+	status := &book.ReservationStatus{}
+
+	err := b.repo.ReleaseBook(ctx, bookId.Id)
+	if err != nil {
+		status.State = false
+
+		return status, err
+	}
+
+	status.State = true
+
+	return status, nil
+}

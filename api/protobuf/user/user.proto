@@ -2,13 +2,6 @@ syntax = "proto3";
 package user;
 option go_package = "github.com/kubaceg/bookstore/internal/common/genproto/user;user";
 
-service BookService {
-  rpc AddBook(Book) returns (BookId) {}
-  rpc GetBook(BookId) returns (Book) {}
-  rpc GetBookList(google.protobuf.Empty) returns (BookList) {}
-}
-
-
 message User {
   string id = 1;
   string name = 2;

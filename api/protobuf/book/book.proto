@@ -8,6 +8,8 @@ service BookService {
   rpc AddBook(Book) returns (BookId) {}
   rpc GetBook(BookId) returns (Book) {}
   rpc GetBookList(google.protobuf.Empty) returns (BookList) {}
+  rpc ReserveBook(BookId) returns (ReservationStatus) {}
+  rpc ReleaseBook(BookId) returns (ReservationStatus) {}
 }
 
 message BookList {
@@ -19,8 +21,19 @@ message Book {
   string title = 2;
   string author = 3;
   string isbn = 4;
+  State state = 5;
+}
+
+enum State {
+  AVAILABLE = 0;
+  RESERVED = 1;
+  NOT_AVAILABLE = 2;
 }
 
 message BookId {
   string id = 1;
+}
+
+message ReservationStatus {
+  bool state = 1;
 }

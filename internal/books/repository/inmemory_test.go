@@ -213,7 +213,139 @@ func TestInMemoryBookRepository_GetBookList(t *testing.T) {
 			gotBooks, _ := i.GetBookList(context.TODO(), BookListParams{})
 
 			if !reflect.DeepEqual(gotBooks, tt.wantBooks) {
-				t.Errorf("GetBook() gotBook = %v, want %v", gotBooks, tt.wantBooks)
+				t.Errorf("GetBookList() gotBook = %v, want %v", gotBooks, tt.wantBooks)
+			}
+		})
+	}
+}
+
+func TestInMemoryBookRepository_ReserveBook(t *testing.T) {
+	books := map[string]BookEntity{
+		"1234": {
+			Id:     "1234",
+			Title:  "Book 1",
+			Author: "Author 1",
+			Isbn:   "1234",
+			State:  Reserved,
+		},
+		"1235": {
+			Id:     "1235",
+			Title:  "Book 1",
+			Author: "Author 1",
+			Isbn:   "1234",
+			State:  Available,
+		},
+		"1236": {
+			Id:     "1236",
+			Title:  "Book 1",
+			Author: "Author 1",
+			Isbn:   "1234",
+			State:  NotAvailable,
+		},
+	}
+
+	tests := []struct {
+		name    string
+		id      string
+		wantErr error
+	}{
+		{
+			name:    "reserve non existing book",
+			id:      "999",
+			wantErr: BookNotFound,
+		},
+		{
+			name:    "reserve already reserved book",
+			id:      "1234",
+			wantErr: BookAlreadyReserved,
+		},
+		{
+			name:    "reserve not available book",
+			id:      "1236",
+			wantErr: BookAlreadyReserved,
+		},
+		{
+			name:    "reserve available book",
+			id:      "1235",
+			wantErr: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			i := &InMemoryBookRepository{
+				books:  books,
+				logger: &test.MockLogger{},
+			}
+			err := i.ReserveBook(context.TODO(), tt.id)
+			if err != tt.wantErr {
+				t.Errorf("ReserveBook() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+		})
+	}
+}
+
+func TestInMemoryBookRepository_ReleaseBook(t *testing.T) {
+	books := map[string]BookEntity{
+		"1234": {
+			Id:     "1234",
+			Title:  "Book 1",
+			Author: "Author 1",
+			Isbn:   "1234",
+			State:  Reserved,
+		},
+		"1235": {
+			Id:     "1235",
+			Title:  "Book 1",
+			Author: "Author 1",
+			Isbn:   "1234",
+			State:  Available,
+		},
+		"1236": {
+			Id:     "1236",
+			Title:  "Book 1",
+			Author: "Author 1",
+			Isbn:   "1234",
+			State:  NotAvailable,
+		},
+	}
+
+	tests := []struct {
+		name    string
+		id      string
+		wantErr error
+	}{
+		{
+			name:    "release non existing book",
+			id:      "999",
+			wantErr: BookNotFound,
+		},
+		{
+			name:    "release already reserved book",
+			id:      "1234",
+			wantErr: nil,
+		},
+		{
+			name:    "release not available book",
+			id:      "1236",
+			wantErr: nil,
+		},
+		{
+			name:    "release available book",
+			id:      "1235",
+			wantErr: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			i := &InMemoryBookRepository{
+				books:  books,
+				logger: &test.MockLogger{},
+			}
+			err := i.ReleaseBook(context.TODO(), tt.id)
+			if err != tt.wantErr {
+				t.Errorf("ReleaseBook() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
 		})
 	}

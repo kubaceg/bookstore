@@ -22,6 +22,8 @@ type BookServiceClient interface {
 	AddBook(ctx context.Context, in *Book, opts ...grpc.CallOption) (*BookId, error)
 	GetBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*Book, error)
 	GetBookList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*BookList, error)
+	ReserveBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*ReservationStatus, error)
+	ReleaseBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*ReservationStatus, error)
 }
 
 type bookServiceClient struct {
@@ -59,6 +61,24 @@ func (c *bookServiceClient) GetBookList(ctx context.Context, in *emptypb.Empty, 
 	return out, nil
 }
 
+func (c *bookServiceClient) ReserveBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*ReservationStatus, error) {
+	out := new(ReservationStatus)
+	err := c.cc.Invoke(ctx, "/book.BookService/ReserveBook", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *bookServiceClient) ReleaseBook(ctx context.Context, in *BookId, opts ...grpc.CallOption) (*ReservationStatus, error) {
+	out := new(ReservationStatus)
+	err := c.cc.Invoke(ctx, "/book.BookService/ReleaseBook", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // BookServiceServer is the server API for BookService service.
 // All implementations must embed UnimplementedBookServiceServer
 // for forward compatibility
@@ -66,6 +86,8 @@ type BookServiceServer interface {
 	AddBook(context.Context, *Book) (*BookId, error)
 	GetBook(context.Context, *BookId) (*Book, error)
 	GetBookList(context.Context, *emptypb.Empty) (*BookList, error)
+	ReserveBook(context.Context, *BookId) (*ReservationStatus, error)
+	ReleaseBook(context.Context, *BookId) (*ReservationStatus, error)
 	mustEmbedUnimplementedBookServiceServer()
 }
 
@@ -81,6 +103,12 @@ func (UnimplementedBookServiceServer) GetBook(context.Context, *BookId) (*Book, 
 }
 func (UnimplementedBookServiceServer) GetBookList(context.Context, *emptypb.Empty) (*BookList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBookList not implemented")
+}
+func (UnimplementedBookServiceServer) ReserveBook(context.Context, *BookId) (*ReservationStatus, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReserveBook not implemented")
+}
+func (UnimplementedBookServiceServer) ReleaseBook(context.Context, *BookId) (*ReservationStatus, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReleaseBook not implemented")
 }
 func (UnimplementedBookServiceServer) mustEmbedUnimplementedBookServiceServer() {}
 
@@ -149,6 +177,42 @@ func _BookService_GetBookList_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _BookService_ReserveBook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BookId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookServiceServer).ReserveBook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/book.BookService/ReserveBook",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookServiceServer).ReserveBook(ctx, req.(*BookId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _BookService_ReleaseBook_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BookId)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BookServiceServer).ReleaseBook(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/book.BookService/ReleaseBook",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BookServiceServer).ReleaseBook(ctx, req.(*BookId))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // BookService_ServiceDesc is the grpc.ServiceDesc for BookService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -167,6 +231,14 @@ var BookService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetBookList",
 			Handler:    _BookService_GetBookList_Handler,
+		},
+		{
+			MethodName: "ReserveBook",
+			Handler:    _BookService_ReserveBook_Handler,
+		},
+		{
+			MethodName: "ReleaseBook",
+			Handler:    _BookService_ReleaseBook_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
