@@ -56,7 +56,25 @@ func (s *BookGrpcService) GetBook(ctx context.Context, id *book.BookId) (entity 
 }
 
 func (s *BookGrpcService) GetBookList(ctx context.Context, empty *emptypb.Empty) (*book.BookList, error) {
-	panic("implement me")
+	var books []*book.Book
+
+	list, err := s.repo.GetBookList(ctx, repository.BookListParams{})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, b := range list {
+		entity := &book.Book{
+			Id:     b.Id,
+			Title:  b.Title,
+			Author: b.Author,
+			Isbn:   b.Isbn,
+			State:  book.State(b.State),
+		}
+		books = append(books, entity)
+	}
+
+	return &book.BookList{Books: books}, nil
 }
 
 func (s *BookGrpcService) ReserveBook(ctx context.Context, bookId *book.BookId) (*book.ReservationStatus, error) {
