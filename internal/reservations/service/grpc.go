@@ -36,7 +36,7 @@ func NewReservationsGrpcService(r repository.ReservationRepository, b book.BookS
 func (r *ReservationsGrpcService) RentBook(ctx context.Context, in *reservation.CreateReservation) (*reservation.ReservationId, error) {
 	status, err := r.bookClient.ReserveBook(ctx, &book.BookId{Id: in.BookId})
 
-	if err != nil || (status != nil && status.State == false) {
+	if err != nil || (status != nil && !status.State) {
 		e := fmt.Errorf("error during rentBook %s", err)
 		r.logger.Error(ctx, e)
 
@@ -44,7 +44,7 @@ func (r *ReservationsGrpcService) RentBook(ctx context.Context, in *reservation.
 	}
 
 	reservationId, err := r.uuidGenerator.Generate()
-	if err != nil || (status != nil && status.State == false) {
+	if err != nil || (status != nil && !status.State) {
 		e := fmt.Errorf("error during rentBook %s", err)
 		r.logger.Error(ctx, e)
 
@@ -61,12 +61,12 @@ func (r *ReservationsGrpcService) RentBook(ctx context.Context, in *reservation.
 	}
 
 	err = r.repository.CreateReservation(ctx, &entity)
-	if err != nil || (status != nil && status.State == false) {
+	if err != nil || (status != nil && !status.State) {
 		e := fmt.Errorf("error during rentBook %s", err)
 		r.logger.Error(ctx, e)
 
 		event := reservations.Error{BookId: in.BookId}
-		r.publisher.Publish(&event)
+		_ = r.publisher.Publish(&event)
 
 		return nil, e
 	}
@@ -76,7 +76,7 @@ func (r *ReservationsGrpcService) RentBook(ctx context.Context, in *reservation.
 		BookId:        in.BookId,
 	}
 
-	r.publisher.Publish(&event)
+	_ = r.publisher.Publish(&event)
 
 	return &reservation.ReservationId{ReservationId: reservationId}, nil
 }
@@ -100,7 +100,7 @@ func (r *ReservationsGrpcService) ReturnBook(ctx context.Context, reservationId 
 		BookId:        entity.BookId,
 	}
 
-	r.publisher.Publish(&event)
+	_ = r.publisher.Publish(&event)
 
 	return reservationId, nil
 }
