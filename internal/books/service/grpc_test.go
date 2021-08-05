@@ -280,6 +280,7 @@ func TestBookGrpcService_ReserveBook(t *testing.T) {
 
 func TestBookGrpcService_ReleaseBook(t *testing.T) {
 	bookId := "1234"
+	testError := errors.New("test")
 
 	tests := []struct {
 		name     string
@@ -312,13 +313,13 @@ func TestBookGrpcService_ReleaseBook(t *testing.T) {
 			},
 			repoMock: func(ctx context.Context) *test.BookRepositoryMock {
 				repo := test.BookRepositoryMock{}
-				repo.On("GetBook", ctx, bookId).Return(nil, repository.BookNotFound)
-				repo.On("UpdateBook", ctx, repository.BookEntity{State: repository.Available}).Return(errors.New("test"))
+				repo.On("GetBook", ctx, bookId).Return(&repository.BookEntity{Id: "1234"}, nil)
+				repo.On("UpdateBook", ctx, repository.BookEntity{Id: "1234", State: repository.Available}).Return(testError)
 
 				return &repo
 			},
 			want:    nil,
-			wantErr: errors.New("test"),
+			wantErr: testError,
 		},
 		{
 			name: "book release success",
