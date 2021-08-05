@@ -60,28 +60,12 @@ func (i *InMemoryBookRepository) GetBookList(_ context.Context, _ BookListParams
 	return
 }
 
-func (i *InMemoryBookRepository) ReserveBook(_ context.Context, id string) (err error) {
-	if book, ok := i.books[id]; ok {
-		if book.State != Available {
-			return BookAlreadyReserved
-		}
-
-		book.State = Reserved
-		i.books[id] = book
-
-		return nil
+func (i *InMemoryBookRepository) UpdateBook(_ context.Context, entity BookEntity) (err error) {
+	if _, ok := i.books[entity.Id]; !ok {
+		return BookNotFound
 	}
 
-	return BookNotFound
-}
+	i.books[entity.Id] = entity
 
-func (i *InMemoryBookRepository) ReleaseBook(_ context.Context, id string) (err error) {
-	if book, ok := i.books[id]; ok {
-		book.State = Available
-		i.books[id] = book
-
-		return nil
-	}
-
-	return BookNotFound
+	return
 }

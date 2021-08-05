@@ -34,6 +34,5 @@ type BookRepository interface {
 	AddBook(ctx context.Context, book BookEntity) (id *string, err error)
 	GetBook(ctx context.Context, id string) (book *BookEntity, err error)
 	GetBookList(ctx context.Context, params BookListParams) (list []BookEntity, err error)
-	ReserveBook(ctx context.Context, id string) (err error)
-	ReleaseBook(ctx context.Context, id string) (err error)
+	UpdateBook(ctx context.Context, entity BookEntity) error
 }

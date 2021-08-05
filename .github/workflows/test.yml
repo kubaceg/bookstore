@@ -20,5 +20,8 @@ jobs:
       - name: Build books
         run: cd internal/books && go build -v ./...
 
+      - name: Build reservations
+        run: cd internal/reservations && go build -v ./...
+
       - name: Test
         run: make tests

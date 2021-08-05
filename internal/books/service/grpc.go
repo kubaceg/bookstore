@@ -56,17 +56,44 @@ func (s *BookGrpcService) GetBook(ctx context.Context, id *book.BookId) (entity 
 }
 
 func (s *BookGrpcService) GetBookList(ctx context.Context, empty *emptypb.Empty) (*book.BookList, error) {
-	panic("implement me")
+	var books []*book.Book
+
+	list, err := s.repo.GetBookList(ctx, repository.BookListParams{})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, b := range list {
+		entity := &book.Book{
+			Id:     b.Id,
+			Title:  b.Title,
+			Author: b.Author,
+			Isbn:   b.Isbn,
+			State:  book.State(b.State),
+		}
+		books = append(books, entity)
+	}
+
+	return &book.BookList{Books: books}, nil
 }
 
 func (s *BookGrpcService) ReserveBook(ctx context.Context, bookId *book.BookId) (*book.ReservationStatus, error) {
 	status := &book.ReservationStatus{}
 
-	err := s.repo.ReserveBook(ctx, bookId.Id)
+	entity, err := s.repo.GetBook(ctx, bookId.Id)
 	if err != nil {
-		status.State = false
+		return nil, err
+	}
 
-		return status, err
+	if book.State(entity.State) != book.State_AVAILABLE {
+		return nil, repository.BookAlreadyReserved
+	}
+
+	entity.State = repository.Reserved
+
+	err = s.repo.UpdateBook(ctx, *entity)
+	if err != nil {
+		return nil, err
 	}
 
 	status.State = true
@@ -77,11 +104,16 @@ func (s *BookGrpcService) ReserveBook(ctx context.Context, bookId *book.BookId) 
 func (s *BookGrpcService) ReleaseBook(ctx context.Context, bookId *book.BookId) (*book.ReservationStatus, error) {
 	status := &book.ReservationStatus{}
 
-	err := s.repo.ReleaseBook(ctx, bookId.Id)
+	entity, err := s.repo.GetBook(ctx, bookId.Id)
 	if err != nil {
-		status.State = false
+		return nil, err
+	}
 
-		return status, err
+	entity.State = repository.Available
+
+	err = s.repo.UpdateBook(ctx, *entity)
+	if err != nil {
+		return nil, err
 	}
 
 	status.State = true

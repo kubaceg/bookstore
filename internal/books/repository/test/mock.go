@@ -25,6 +25,10 @@ func (m *BookRepositoryMock) AddBook(ctx context.Context, book repository.BookEn
 func (m *BookRepositoryMock) GetBook(ctx context.Context, id string) (book *repository.BookEntity, err error) {
 	args := m.Called(ctx, id)
 
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+
 	return args.Get(0).(*repository.BookEntity), args.Error(1)
 }
 
@@ -34,14 +38,8 @@ func (m *BookRepositoryMock) GetBookList(ctx context.Context, params repository.
 	return args.Get(0).([]repository.BookEntity), args.Error(1)
 }
 
-func (m *BookRepositoryMock) ReserveBook(ctx context.Context, id string) (err error) {
-	args := m.Called(ctx, id)
-
-	return args.Error(0)
-}
-
-func (m *BookRepositoryMock) ReleaseBook(ctx context.Context, id string) (err error) {
-	args := m.Called(ctx, id)
+func (m *BookRepositoryMock) UpdateBook(ctx context.Context, entity repository.BookEntity) (err error) {
+	args := m.Called(ctx, entity)
 
 	return args.Error(0)
 }
