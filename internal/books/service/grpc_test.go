@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	"testing"
 
@@ -208,22 +209,37 @@ func TestBookGrpcService_ReserveBook(t *testing.T) {
 		bookId   book.BookId
 		repoMock func(ctx context.Context) *test.BookRepositoryMock
 		want     *book.ReservationStatus
-		wantErr  bool
+		wantErr  error
 	}{
 		{
-			name: "book reservation error",
+			name: "book not found",
 			ctx:  context.TODO(),
 			bookId: book.BookId{
 				Id: bookId,
 			},
 			repoMock: func(ctx context.Context) *test.BookRepositoryMock {
 				repo := test.BookRepositoryMock{}
-				repo.On("ReserveBook", ctx, bookId).Return(repository.BookAlreadyReserved)
+				repo.On("GetBook", ctx, bookId).Return(nil, repository.BookNotFound)
 
 				return &repo
 			},
-			want:    &book.ReservationStatus{State: false},
-			wantErr: true,
+			want:    nil,
+			wantErr: repository.BookNotFound,
+		},
+		{
+			name: "book already reserved error",
+			ctx:  context.TODO(),
+			bookId: book.BookId{
+				Id: bookId,
+			},
+			repoMock: func(ctx context.Context) *test.BookRepositoryMock {
+				repo := test.BookRepositoryMock{}
+				repo.On("GetBook", ctx, bookId).Return(&repository.BookEntity{State: repository.Reserved}, nil)
+
+				return &repo
+			},
+			want:    nil,
+			wantErr: repository.BookAlreadyReserved,
 		},
 		{
 			name: "book reservation success",
@@ -233,12 +249,13 @@ func TestBookGrpcService_ReserveBook(t *testing.T) {
 			},
 			repoMock: func(ctx context.Context) *test.BookRepositoryMock {
 				repo := test.BookRepositoryMock{}
-				repo.On("ReserveBook", ctx, bookId).Return(nil)
+				repo.On("GetBook", ctx, bookId).Return(&repository.BookEntity{State: repository.Available}, nil)
+				repo.On("UpdateBook", ctx, repository.BookEntity{State: repository.Reserved}).Return(nil)
 
 				return &repo
 			},
 			want:    &book.ReservationStatus{State: true},
-			wantErr: false,
+			wantErr: nil,
 		},
 	}
 
@@ -248,7 +265,7 @@ func TestBookGrpcService_ReserveBook(t *testing.T) {
 			b := NewBookGrpcService(repoMock)
 
 			got, err := b.ReserveBook(tt.ctx, &tt.bookId)
-			if (err != nil) != tt.wantErr {
+			if err != tt.wantErr {
 				t.Errorf("ReserveBook() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
@@ -270,22 +287,38 @@ func TestBookGrpcService_ReleaseBook(t *testing.T) {
 		bookId   book.BookId
 		repoMock func(ctx context.Context) *test.BookRepositoryMock
 		want     *book.ReservationStatus
-		wantErr  bool
+		wantErr  error
 	}{
 		{
-			name: "book release error",
+			name: "book not found",
 			ctx:  context.TODO(),
 			bookId: book.BookId{
 				Id: bookId,
 			},
 			repoMock: func(ctx context.Context) *test.BookRepositoryMock {
 				repo := test.BookRepositoryMock{}
-				repo.On("ReleaseBook", ctx, bookId).Return(repository.BookNotFound)
+				repo.On("GetBook", ctx, bookId).Return(nil, repository.BookNotFound)
 
 				return &repo
 			},
-			want:    &book.ReservationStatus{State: false},
-			wantErr: true,
+			want:    nil,
+			wantErr: repository.BookNotFound,
+		},
+		{
+			name: "book update error",
+			ctx:  context.TODO(),
+			bookId: book.BookId{
+				Id: bookId,
+			},
+			repoMock: func(ctx context.Context) *test.BookRepositoryMock {
+				repo := test.BookRepositoryMock{}
+				repo.On("GetBook", ctx, bookId).Return(nil, repository.BookNotFound)
+				repo.On("UpdateBook", ctx, repository.BookEntity{State: repository.Available}).Return(errors.New("test"))
+
+				return &repo
+			},
+			want:    nil,
+			wantErr: errors.New("test"),
 		},
 		{
 			name: "book release success",
@@ -295,12 +328,13 @@ func TestBookGrpcService_ReleaseBook(t *testing.T) {
 			},
 			repoMock: func(ctx context.Context) *test.BookRepositoryMock {
 				repo := test.BookRepositoryMock{}
-				repo.On("ReleaseBook", ctx, bookId).Return(nil)
+				repo.On("GetBook", ctx, bookId).Return(&repository.BookEntity{State: repository.NotAvailable}, nil)
+				repo.On("UpdateBook", ctx, repository.BookEntity{State: repository.Available}).Return(nil)
 
 				return &repo
 			},
 			want:    &book.ReservationStatus{State: true},
-			wantErr: false,
+			wantErr: nil,
 		},
 	}
 
@@ -310,7 +344,7 @@ func TestBookGrpcService_ReleaseBook(t *testing.T) {
 			b := NewBookGrpcService(repoMock)
 
 			got, err := b.ReleaseBook(tt.ctx, &tt.bookId)
-			if (err != nil) != tt.wantErr {
+			if err != tt.wantErr {
 				t.Errorf("ReleaseBook() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}

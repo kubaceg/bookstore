@@ -1,19 +1,39 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"os"
 
-	"golang.org/x/net/context"
+	"github.com/joho/godotenv"
+	"github.com/streadway/amqp"
+
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 
+	"github.com/kubaceg/bookstore/internal/common/eventbus"
 	"github.com/kubaceg/bookstore/internal/common/genproto/book"
+	"github.com/kubaceg/bookstore/internal/common/genproto/reservation"
+	"github.com/kubaceg/bookstore/internal/common/log"
+	"github.com/kubaceg/bookstore/internal/common/server"
+	"github.com/kubaceg/bookstore/internal/common/uuid"
+	reservationsRepo "github.com/kubaceg/bookstore/internal/reservations/repository"
+	"github.com/kubaceg/bookstore/internal/reservations/service"
 )
 
-func main() {
-	serverAddr := "127.0.0.1:8081"
+var port, bookServiceAddress, rabbitMqUri, rabbitExchange string
 
-	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
+func main() {
+	err := godotenv.Load()
+	if err != nil {
+		panic("Error loading .env file")
+	}
+
+	port = os.Getenv("PORT")
+	bookServiceAddress = os.Getenv("BOOK_CLIENT_URI")
+	rabbitMqUri = os.Getenv("RABBITMQ_URI")
+	rabbitExchange = os.Getenv("RABBITMQ_EXCHANGE")
+
+	conn, err := grpc.Dial(bookServiceAddress, grpc.WithInsecure())
 	defer conn.Close()
 
 	if err != nil {
@@ -21,33 +41,30 @@ func main() {
 	}
 
 	bookClient := book.NewBookServiceClient(conn)
+	logger := log.StdOut{}
+	uuidGen := uuid.V4Generator{}
+	repository := reservationsRepo.NewReservationInmemoryRepository()
+	grpcServer := server.NewGrpcServer(logger)
 
-	entity := book.Book{
-		Id:     "1234",
-		Title:  "Book 1",
-		Author: "Kuba",
-		Isbn:   "1234",
-		State:  book.State_AVAILABLE,
-	}
+	rabbitConn, err := amqp.Dial(rabbitMqUri)
+	failOnError(err, "Failed to connect to RabbitMQ")
+	defer rabbitConn.Close()
 
-	id, err := bookClient.AddBook(context.TODO(), &entity)
+	ch, err := rabbitConn.Channel()
+	failOnError(err, "Failed to open a channel")
+	defer ch.Close()
+
+	rabbitPublisher := eventbus.NewRabbitMqPublisher(ch, rabbitExchange)
+
+	grpcService := service.NewReservationsGrpcService(repository, bookClient, logger, &uuidGen, rabbitPublisher)
+
+	grpcServer.RunGRPCServer(context.Background(), port, func(server *grpc.Server) {
+		reservation.RegisterReservationServiceServer(server, grpcService)
+	})
+}
+
+func failOnError(err error, msg string) {
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("%s: %s", msg, err))
 	}
-
-	fmt.Println(id)
-
-	returnedBook, err := bookClient.GetBook(context.TODO(), &book.BookId{Id: "1234"})
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Printf("Returned book: %+v\n", returnedBook)
-
-	list, err := bookClient.GetBookList(context.TODO(), &emptypb.Empty{})
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Printf("Returned book list: %+v\n", list)
 }

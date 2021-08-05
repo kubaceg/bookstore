@@ -1,12 +1,12 @@
 package repository
 
 import (
+	"context"
 	"errors"
 	"time"
 )
 
 var ReservationDuplicateError = errors.New("reservation with such id already exists")
-var ReservationError = errors.New("error during reservation")
 var ReservationNotFound = errors.New("reservation not found")
 
 type ReservationEntity struct {
@@ -18,11 +18,17 @@ type ReservationEntity struct {
 	Duration      time.Duration `json:"duration"`
 }
 
-// ReservationFilter TODO implement filters
-type ReservationFilter struct{}
+func (r ReservationEntity) GetOverdue() bool {
+	if r.ReturnAt == nil && time.Now().After(r.CreatedAt.Add(r.Duration)) {
+		return true
+	}
+
+	return false
+}
 
 type ReservationRepository interface {
-	CreateReservation(entity *ReservationEntity) error
-	UpdateReturnAt(id string, returnAt time.Time) error
-	GetReservationList(filter ReservationFilter) []ReservationEntity
+	CreateReservation(ctx context.Context, entity *ReservationEntity) error
+	GetReservation(ctx context.Context, reservationId string) (*ReservationEntity, error)
+	UpdateReservation(ctx context.Context, entity ReservationEntity) error
+	GetReservationList(ctx context.Context) []ReservationEntity
 }

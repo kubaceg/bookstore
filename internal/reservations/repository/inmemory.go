@@ -1,18 +1,20 @@
 package repository
 
-import "time"
+import (
+	"context"
+)
 
 type ReservationInmemoryRepo struct {
 	reservations map[string]*ReservationEntity
 }
 
-func NewReservationInmemoryRepo() ReservationRepository {
+func NewReservationInmemoryRepository() ReservationRepository {
 	return &ReservationInmemoryRepo{
 		reservations: map[string]*ReservationEntity{},
 	}
 }
 
-func (r *ReservationInmemoryRepo) CreateReservation(entity *ReservationEntity) error {
+func (r *ReservationInmemoryRepo) CreateReservation(_ context.Context, entity *ReservationEntity) error {
 	if _, ok := r.reservations[entity.ReservationId]; ok {
 		return ReservationDuplicateError
 	}
@@ -22,17 +24,25 @@ func (r *ReservationInmemoryRepo) CreateReservation(entity *ReservationEntity) e
 	return nil
 }
 
-func (r *ReservationInmemoryRepo) UpdateReturnAt(id string, returnAt time.Time) error {
-	if _, ok := r.reservations[id]; !ok {
+func (r *ReservationInmemoryRepo) GetReservation(_ context.Context, reservationId string) (*ReservationEntity, error) {
+	if _, ok := r.reservations[reservationId]; !ok {
+		return nil, ReservationNotFound
+	}
+
+	return r.reservations[reservationId], nil
+}
+
+func (r *ReservationInmemoryRepo) UpdateReservation(_ context.Context, entity ReservationEntity) error {
+	if _, ok := r.reservations[entity.ReservationId]; !ok {
 		return ReservationNotFound
 	}
 
-	r.reservations[id].ReturnAt = &returnAt
+	r.reservations[entity.ReservationId] = &entity
 
 	return nil
 }
 
-func (r *ReservationInmemoryRepo) GetReservationList(filter ReservationFilter) (array []ReservationEntity) {
+func (r *ReservationInmemoryRepo) GetReservationList(_ context.Context) (array []ReservationEntity) {
 	array = []ReservationEntity{}
 
 	for _, r := range r.reservations {

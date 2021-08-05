@@ -4,22 +4,12 @@ option go_package = "github.com/kubaceg/bookstore/internal/common/genproto/reser
 
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 
 service ReservationService {
   rpc RentBook(CreateReservation) returns (ReservationId) {}
   rpc ReturnBook(ReservationId) returns (ReservationId) {}
-  rpc GetReservationList(ReservationFilter) returns (ReservationList) {}
-}
-
-message ReservationFilter {
-  ReservationType reservationType = 1;
-}
-
-enum ReservationType {
-  ALL = 0;
-  ACTIVE = 1;
-  OVERDUE = 2;
-  CLOSED = 3;
+  rpc GetReservationList(google.protobuf.Empty) returns (ReservationList) {}
 }
 
 message ReservationList {
@@ -36,10 +26,9 @@ message Reservation {
 }
 
 message CreateReservation {
-  string userId = 2;
-  string bookId = 3;
-  google.protobuf.Timestamp createdAt = 4;
-  google.protobuf.Duration duration = 5;
+  string userId = 1;
+  string bookId = 2;
+  google.protobuf.Duration duration = 3;
 }
 
 message ReservationId {
